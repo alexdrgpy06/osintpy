@@ -8,7 +8,6 @@ Uses thefuzz for probabilistic name matching and regex for metadata extraction.
 
 import json
 import re
-import logging
 import os
 from google import genai
 from datetime import datetime
