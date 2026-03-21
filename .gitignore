@@ -1,2 +1,8 @@
-node_modules/
-frontend/node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+backend/data/profiles.db
+backend/journals/
+test_*.py
+test_gen.py
+test_validate.py
