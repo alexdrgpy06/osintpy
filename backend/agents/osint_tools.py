@@ -40,6 +40,10 @@ class OSINTToolAgent:
         r"\?q=",             # Search queries
     ]
 
+    # Pre-computed normalized sets and compiled regexes for O(1) matching
+    _NORMALIZED_BLACKLISTED_URLS = {u.lower().rstrip("/") for u in BLACKLISTED_URLS}
+    _COMPILED_BLACKLISTED_PATTERNS = [re.compile(p) for p in BLACKLISTED_URL_PATTERNS]
+
     # ═══════════════════════════════════════════════════════════════
     # PLATFORM NAME MAPPING — exact domain match (no substring!)
     # ═══════════════════════════════════════════════════════════════
@@ -122,8 +126,8 @@ class OSINTToolAgent:
         """Check if a URL is a known false positive."""
         url_lower = url.lower().rstrip("/")
         
-        # Exact match blacklist
-        if url_lower in {u.lower().rstrip("/") for u in cls.BLACKLISTED_URLS}:
+        # Exact match blacklist (O(1) lookup using pre-computed set)
+        if url_lower in cls._NORMALIZED_BLACKLISTED_URLS:
             return True
         
         # Domain blacklist
@@ -135,9 +139,9 @@ class OSINTToolAgent:
         except:
             pass
         
-        # Pattern blacklist
-        for pattern in cls.BLACKLISTED_URL_PATTERNS:
-            if re.search(pattern, url_lower):
+        # Pattern blacklist (using pre-compiled regex patterns)
+        for pattern in cls._COMPILED_BLACKLISTED_PATTERNS:
+            if pattern.search(url_lower):
                 return True
         
         # URL is clearly a search/query page (has the username in query params, not path)
