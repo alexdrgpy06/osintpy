@@ -296,27 +296,58 @@ class OSINTToolAgent:
     # CLI Tools
     # ═══════════════════════════════════════════════════════════════
 
+    @staticmethod
+    def sanitize_cli_args(val: str) -> str:
+        """Sanitize input to prevent argument injection in CLI tools."""
+        if not val:
+            return ""
+        # Keep only alphanumeric, ., _, @, +, and -
+        clean_val = re.sub(r'[^\w\.\_\@\+\-]', '', val)
+        # Strip leading dashes to prevent flag injection
+        clean_val = clean_val.lstrip('-')
+        return clean_val
+
     @classmethod
     def run_sherlock_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        safe_username = cls.sanitize_cli_args(username)
+        if not safe_username:
+            callback("[ERROR] Username inválido.")
+            return
+
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         sherlock_dir = os.path.join(project_root, "sherlock")
-        cmd = [sys.executable, "-m", "sherlock_project", username, "--timeout", "10", "--print-found", "--no-color"]
+        cmd = [sys.executable, "-m", "sherlock_project", safe_username, "--timeout", "10", "--print-found", "--no-color"]
         return cls.run_tool_streaming("Sherlock", cmd, sherlock_dir, callback, current_logs, consolidated_results, timeout=120)
 
     @classmethod
     def run_maigret_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
-        cmd = [sys.executable, "-m", "maigret", username, "--timeout", "20", "-n", "30", "--no-color"]
+        safe_username = cls.sanitize_cli_args(username)
+        if not safe_username:
+            callback("[ERROR] Username inválido.")
+            return
+
+        cmd = [sys.executable, "-m", "maigret", safe_username, "--timeout", "20", "-n", "30", "--no-color"]
         return cls.run_tool_streaming("Maigret", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=180)
 
     @classmethod
     def run_blackbird_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        safe_username = cls.sanitize_cli_args(username)
+        if not safe_username:
+            callback("[ERROR] Username inválido.")
+            return
+
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         blackbird_dir = os.path.join(project_root, "blackbird")
-        cmd = [sys.executable, "blackbird.py", "-u", username]
+        cmd = [sys.executable, "blackbird.py", "-u", safe_username]
         return cls.run_tool_streaming("Blackbird", cmd, blackbird_dir, callback, current_logs, consolidated_results, timeout=120)
 
     @classmethod
     def run_holehe_live(cls, email: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        safe_email = cls.sanitize_cli_args(email)
+        if not safe_email:
+            callback("[ERROR] Email inválido.")
+            return
+
         # Holehe exists as local dir, not pip-installed
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         holehe_dir = os.path.join(project_root, "holehe")
@@ -325,7 +356,7 @@ class OSINTToolAgent:
         if os.path.exists(os.path.join(holehe_dir, "holehe", "core.py")):
             cmd = [sys.executable, "-c", f"import sys; sys.path.insert(0, r'{holehe_dir}'); from holehe.core import *; import asyncio; asyncio.run(main())"]
         else:
-            cmd = [sys.executable, "-m", "holehe", email]
+            cmd = [sys.executable, "-m", "holehe", safe_email]
         
         callback(f"[INFO] Holehe: Verificando registros de email...")
         # If holehe isn't available, skip gracefully
@@ -336,12 +367,22 @@ class OSINTToolAgent:
 
     @classmethod
     def run_toutatis_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
-        cmd = [sys.executable, "-m", "toutatis", "-u", username]
+        safe_username = cls.sanitize_cli_args(username)
+        if not safe_username:
+            callback("[ERROR] Username inválido.")
+            return
+
+        cmd = [sys.executable, "-m", "toutatis", "-u", safe_username]
         return cls.run_tool_streaming("Toutatis", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=60)
 
     @classmethod
     def run_social_analyzer_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
-        cmd = [sys.executable, "-m", "social_analyzer", "--username", username, "--websites", "all", "--metadata", "--extract"]
+        safe_username = cls.sanitize_cli_args(username)
+        if not safe_username:
+            callback("[ERROR] Username inválido.")
+            return
+
+        cmd = [sys.executable, "-m", "social_analyzer", "--username", safe_username, "--websites", "all", "--metadata", "--extract"]
         callback(f"[INFO] Iniciando rastreo pasivo (+1000 sitios) con Social-Analyzer...")
         return cls.run_tool_streaming("Social-Analyzer", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=300)
 
