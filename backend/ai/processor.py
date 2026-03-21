@@ -30,6 +30,7 @@ class AIProcessor:
         Noticias:
         {news_context}
         
+        Por favor, enfócate en sus posibles conexiones en Paraguay, vínculos con el sector público (cargos, licitaciones) y resalta cualquier indicador de riesgo o controversia específica en la región paraguaya.
         Responde en español profesional.
         """
         

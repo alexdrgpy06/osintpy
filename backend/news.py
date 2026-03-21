@@ -31,7 +31,7 @@ class NewsScraper:
         site_specific = []
         try:
             with DDGS() as ddgs:
-                q_sites = f'"{query}" (site:abc.com.py OR site:ultimahora.com OR site:lanacion.com.py)'
+                q_sites = f'"{query}" (site:abc.com.py OR site:ultimahora.com OR site:lanacion.com.py OR site:nanduti.com.py OR site:hoy.com.py OR site:extra.com.py)'
                 res = list(ddgs.text(q_sites, max_results=5))
                 site_specific = [{
                     "title": r['title'],

@@ -201,8 +201,26 @@ class ProfilePersistenceAgent:
         cls.init_db()
         conn = sqlite3.connect(cls.DB_PATH)
         now = datetime.now().isoformat()
-        data_str = json.dumps(new_data)
-        full_name = new_data.get("identity", {}).get("full_name", "")
+
+        # Load existing profile to merge correctly if not full replacement
+        cursor = conn.cursor()
+        cursor.execute("SELECT data_json FROM profiles WHERE id = ?", (profile_id,))
+        row = cursor.fetchone()
+
+        if row:
+            try:
+                existing_data = json.loads(row[0])
+            except:
+                existing_data = {}
+        else:
+            existing_data = {}
+
+        # Recursive merge or full overwrite (we assume the payload is a full object representing the state)
+        # However, to be safe, if we get partial data, we update. For a profile editor, it's usually a full dump.
+        existing_data.update(new_data)
+
+        data_str = json.dumps(existing_data)
+        full_name = existing_data.get("identity", {}).get("full_name", "")
         conn.execute("""
             UPDATE profiles 
             SET data_json = ?, full_name = ?, updated_at = ?
