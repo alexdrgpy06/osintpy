@@ -1,0 +1,15 @@
+2026-03-19 22:29:09,821 [ERROR] FATAL: Import failure: cannot import name 'ParaguayGovAgent' from 'agents.py_gov' (F:\OSINTPY\osintpy\backend\agents\py_gov.py)
+2026-03-19 22:29:09,821 [ERROR] FATAL: Import failure: cannot import name 'ParaguayGovAgent' from 'agents.py_gov' (F:\OSINTPY\osintpy\backend\agents\py_gov.py)
+2026-03-19 22:29:09,821 [ERROR] FATAL: Import failure: cannot import name 'ParaguayGovAgent' from 'agents.py_gov' (F:\OSINTPY\osintpy\backend\agents\py_gov.py)
+2026-03-19 22:29:10,165 [INFO] API Search request: 3415404 (ci)
+2026-03-19 22:29:10,166 [INFO] START Task de8a7c4d-5c96-43c7-80c7-805a5add7413 for 3415404
+2026-03-19 22:29:10,175 [INFO] FINISH Task de8a7c4d-5c96-43c7-80c7-805a5add7413 successfully
+2026-03-19 22:29:10,175 [INFO] API Search request: aito81 (username)
+2026-03-19 22:29:10,176 [INFO] START Task f1b8dd29-7d05-474c-8a8b-655e867c39e7 for aito81
+2026-03-19 22:29:10,710 [INFO] FINISH Task f1b8dd29-7d05-474c-8a8b-655e867c39e7 successfully
+2026-03-19 23:45:32,337 [INFO] API Search request: aito81 (username)
+2026-03-19 23:45:32,341 [INFO] START Task 56975dd5-d24a-4dab-863f-337999891817 for aito81
+2026-03-19 23:45:32,941 [INFO] FINISH Task 56975dd5-d24a-4dab-863f-337999891817 successfully
+2026-03-19 23:46:50,809 [ERROR] FATAL: Import failure: cannot import name 'ParaguayGovAgent' from 'agents.py_gov' (F:\OSINTPY\osintpy\backend\agents\py_gov.py)
+2026-03-19 23:46:50,809 [ERROR] FATAL: Import failure: cannot import name 'ParaguayGovAgent' from 'agents.py_gov' (F:\OSINTPY\osintpy\backend\agents\py_gov.py)
+2026-03-19 23:46:50,809 [ERROR] FATAL: Import failure: cannot import name 'ParaguayGovAgent' from 'agents.py_gov' (F:\OSINTPY\osintpy\backend\agents\py_gov.py)

@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+requests
+httpx
+beautifulsoup4
+motor
+neo4j
+python-dotenv
+google-genai
+pydantic
+pydantic-settings
+python-multipart
+phonenumbers
+lxml

@@ -1,0 +1,26 @@
+{
+  "run_identity": {
+    "run_id": "25b83b95-b6eb-4bd9-842a-0a3c5d89bb0e",
+    "role": "champion",
+    "skill_name": "osintpy-core",
+    "skill_version": "5.0.0",
+    "timestamp_start": "2026-03-21T00:34:34.466148",
+    "timestamp_end": "2026-03-21T00:34:34.466148",
+    "journal_spec_version": "1.3",
+    "journal_type": "research"
+  },
+  "runtime": {
+    "model": "deterministic-omni-resolver",
+    "provider": "local",
+    "node": "osintpy-v5-engine"
+  },
+  "input": {
+    "command": "alexdrgpy06"
+  },
+  "metrics": {
+    "total_tools_ran": 14,
+    "nodes_found": 18,
+    "risk_score": 100,
+    "duration_seconds": 1289.1919519901276
+  }
+}
