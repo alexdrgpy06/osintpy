@@ -95,6 +95,15 @@ class ParaguayDataAgent:
             news_hits = await cls.search_ddg_noticias(name)
             if news_hits: hits.extend(news_hits)
             
+            dncp_hit = await cls.search_dncp(name, callback=callback)
+            if dncp_hit: hits.append(dncp_hit)
+
+            csj_hit = await cls.search_csj(name, callback=callback)
+            if csj_hit: hits.append(csj_hit)
+
+            gaceta_hit = await cls.search_gaceta(name, callback=callback)
+            if gaceta_hit: hits.append(gaceta_hit)
+
         return hits
 
     @classmethod
@@ -255,6 +264,72 @@ class ParaguayDataAgent:
         return None
 
     @classmethod
+    async def search_dncp(cls, query: str, callback=None):
+        """
+        Consulta en la Dirección Nacional de Contrataciones Públicas (DNCP).
+        """
+        if callback: callback(f"[DNCP] Buscando registros de contrataciones públicas para: {query}...")
+        try:
+            from duckduckgo_search import DDGS
+            q = f'"{query}" site:contrataciones.gov.py'
+            with DDGS() as ddgs:
+                results = list(ddgs.text(q, max_results=3))
+                if results:
+                    return {
+                        "source": "DNCP_CONTRATACIONES",
+                        "full_name": query,
+                        "details": f"Mención en Portal DNCP: {results[0]['title']}",
+                        "type": "civic_record",
+                        "meta": {"url": results[0]['href'], "snippet": results[0]['body']}
+                    }
+        except: pass
+        return None
+
+    @classmethod
+    async def search_csj(cls, query: str, callback=None):
+        """
+        Consulta en la Corte Suprema de Justicia (CSJ).
+        """
+        if callback: callback(f"[CSJ] Buscando registros judiciales para: {query}...")
+        try:
+            from duckduckgo_search import DDGS
+            q = f'"{query}" site:pj.gov.py OR site:csj.gov.py'
+            with DDGS() as ddgs:
+                results = list(ddgs.text(q, max_results=3))
+                if results:
+                    return {
+                        "source": "CSJ_PODER_JUDICIAL",
+                        "full_name": query,
+                        "details": f"Mención en Poder Judicial: {results[0]['title']}",
+                        "type": "civic_record",
+                        "meta": {"url": results[0]['href'], "snippet": results[0]['body']}
+                    }
+        except: pass
+        return None
+
+    @classmethod
+    async def search_gaceta(cls, query: str, callback=None):
+        """
+        Consulta en la Gaceta Oficial.
+        """
+        if callback: callback(f"[GACETA] Buscando registros oficiales para: {query}...")
+        try:
+            from duckduckgo_search import DDGS
+            q = f'"{query}" site:gacetaoficial.gov.py'
+            with DDGS() as ddgs:
+                results = list(ddgs.text(q, max_results=3))
+                if results:
+                    return {
+                        "source": "GACETA_OFICIAL",
+                        "full_name": query,
+                        "details": f"Mención en Gaceta: {results[0]['title']}",
+                        "type": "civic_record",
+                        "meta": {"url": results[0]['href'], "snippet": results[0]['body']}
+                    }
+        except: pass
+        return None
+
+    @classmethod
     async def search_ips_nomina(cls, query: str, callback=None):
         """
         Consulta pública de asegurados IPS (Simulada para v10 con DDGS logic).
@@ -263,7 +338,7 @@ class ParaguayDataAgent:
         if callback: callback(f"[IPS] Buscando registros de seguridad social para: {query}...")
         try:
             from duckduckgo_search import DDGS
-            q = f'"{query}" site:ips.gov.py (asegurado OR jubilado OR nómina)'
+            q = f'"{query}" site:ips.gov.py (asegurado OR jubilado OR nómina OR aporte OR empleador)'
             with DDGS() as ddgs:
                 results = list(ddgs.text(q, max_results=3))
                 if results:

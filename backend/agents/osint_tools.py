@@ -404,6 +404,33 @@ class OSINTToolAgent:
             callback(f"[ERROR Hunter] {str(e)}")
 
     @classmethod
+    async def run_leakcheck_live(cls, email: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        """LeakCheck — verify if email has been leaked."""
+        callback(f"[INFO] Consultando LeakCheck...")
+        try:
+            async with httpx.AsyncClient(timeout=15, verify=False) as client:
+                resp = await client.get(f"https://leakcheck.io/api/public", params={"check": email})
+                if resp.status_code == 200:
+                    data = resp.json()
+                    success = data.get("success", False)
+                    if success:
+                        found = data.get("found", 0)
+                        if found > 0:
+                            callback(f"[LeakCheck] Encontrado {found} filtraciones para {email}.")
+                            node = {
+                                "type": "email_leak", "source": "LeakCheck",
+                                "value": email,
+                                "data": {"leaks": found}
+                            }
+                            consolidated_results.append(node)
+                        else:
+                            callback(f"[LeakCheck] Sin filtraciones conocidas.")
+                    else:
+                        callback(f"[LeakCheck] Error en API: {data.get('error', 'Desconocido')}")
+        except Exception as e:
+            callback(f"[ERROR LeakCheck] {str(e)}")
+
+    @classmethod
     async def run_listahu(cls, phone: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
         """ListaHu — Verificación de números en reportes de estafas en Paraguay."""
         callback(f"[INFO] Consultando historial de fraudes/estafas en ListaHu para {phone}...")

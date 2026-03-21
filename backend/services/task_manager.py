@@ -356,10 +356,10 @@ class LocalTaskRunner:
             if real_names:
                 from news import NewsScraper
                 for name in real_names[:1]:
-                    status_update(f"[NEWS] Buscando menciones en prensa paraguaya: {name}")
+                    log_callback(f"[NEWS] Buscando menciones en prensa paraguaya: {name}")
                     news_hits = await NewsScraper.get_combined_news(name)
                     for n in news_hits:
-                        discovered_results.append({
+                        consolidated_results.append({
                             "type": "news_record", "source": n['source'], "value": n['title'], "meta": n
                         })
 
