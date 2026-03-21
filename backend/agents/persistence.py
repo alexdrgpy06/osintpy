@@ -167,28 +167,40 @@ class ProfilePersistenceAgent:
         try:
             with sqlite3.connect(cls.DB_PATH) as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT data_json FROM profiles") # Corrected column name to data_json
-                rows = cursor.fetchall()
+                query = """
+                SELECT
+                    COUNT(id),
+                    COALESCE(SUM(
+                        CASE
+                            WHEN data_json IS NOT NULL AND json_valid(data_json) = 1 AND json_type(data_json, '$.digital_footprint') = 'array'
+                            THEN json_array_length(data_json, '$.digital_footprint')
+                            ELSE 0
+                        END
+                    ), 0),
+                    COALESCE(SUM(
+                        CASE
+                            WHEN data_json IS NOT NULL AND json_valid(data_json) = 1 AND json_type(data_json, '$.contacts.emails') = 'array'
+                            THEN json_array_length(data_json, '$.contacts.emails')
+                            ELSE 0
+                        END
+                    ), 0),
+                    COALESCE(SUM(
+                        CASE
+                            WHEN data_json IS NOT NULL AND json_valid(data_json) = 1 AND json_type(data_json, '$.contacts.phones') = 'array'
+                            THEN json_array_length(data_json, '$.contacts.phones')
+                            ELSE 0
+                        END
+                    ), 0)
+                FROM profiles;
+                """
+                cursor.execute(query)
+                row = cursor.fetchone()
                 
-                total_profiles = len(rows)
-                total_nodes = 0
-                total_emails = 0
-                total_phones = 0
-                
-                for row in rows:
-                    if not row[0]: continue
-                    try:
-                        data = json.loads(row[0])
-                        total_nodes += len(data.get("digital_footprint", []))
-                        total_emails += len(data.get("contacts", {}).get("emails", []))
-                        total_phones += len(data.get("contacts", {}).get("phones", []))
-                    except: pass
-                    
                 return {
-                    "total_profiles": total_profiles,
-                    "total_nodes": total_nodes,
-                    "total_emails": total_emails,
-                    "total_phones": total_phones
+                    "total_profiles": row[0] if row else 0,
+                    "total_nodes": row[1] if row else 0,
+                    "total_emails": row[2] if row else 0,
+                    "total_phones": row[3] if row else 0
                 }
         except Exception as e:
             import logging # Added import for logging
@@ -273,30 +285,49 @@ class ProfilePersistenceAgent:
         cls.init_db()
         conn = sqlite3.connect(cls.DB_PATH)
         cursor = conn.cursor()
-        cursor.execute("SELECT data_json FROM profiles")
-        rows = cursor.fetchall()
+        query = """
+        SELECT
+            COUNT(id),
+            COALESCE(SUM(
+                CASE
+                    WHEN data_json IS NOT NULL AND json_valid(data_json) = 1 AND json_type(data_json, '$.digital_footprint') = 'array'
+                    THEN json_array_length(data_json, '$.digital_footprint')
+                    ELSE 0
+                END
+            ), 0),
+            COALESCE(SUM(
+                CASE
+                    WHEN data_json IS NOT NULL AND json_valid(data_json) = 1 AND json_type(data_json, '$.contacts.emails') = 'array'
+                    THEN json_array_length(data_json, '$.contacts.emails')
+                    ELSE 0
+                END
+            ), 0),
+            COALESCE(SUM(
+                CASE
+                    WHEN data_json IS NOT NULL AND json_valid(data_json) = 1 AND json_type(data_json, '$.news_mentions') = 'array'
+                    THEN json_array_length(data_json, '$.news_mentions')
+                    ELSE 0
+                END
+            ), 0),
+            COALESCE(SUM(
+                CASE
+                    WHEN data_json IS NOT NULL AND json_valid(data_json) = 1 AND CAST(json_extract(data_json, '$.risk_score') AS REAL) > 50
+                    THEN 1
+                    ELSE 0
+                END
+            ), 0)
+        FROM profiles;
+        """
+        cursor.execute(query)
+        row = cursor.fetchone()
         conn.close()
-        
-        total_profiles = len(rows)
-        total_socials = 0
-        total_emails = 0
-        total_news = 0
-        high_risk_count = 0
-        
-        for r in rows:
-            data = json.loads(r[0])
-            total_socials += len(data.get("digital_footprint", []))
-            total_emails += len(data.get("contacts", {}).get("emails", []))
-            total_news += len(data.get("news_mentions", []))
-            if data.get("risk_score", 0) > 50:
-                high_risk_count += 1
                 
         return {
-            "total_profiles": total_profiles,
-            "total_social_accounts": total_socials,
-            "total_emails_leaked": total_emails,
-            "total_news_mentions": total_news,
-            "high_risk_profiles": high_risk_count
+            "total_profiles": row[0] if row else 0,
+            "total_social_accounts": row[1] if row else 0,
+            "total_emails_leaked": row[2] if row else 0,
+            "total_news_mentions": row[3] if row else 0,
+            "high_risk_profiles": row[4] if row else 0
         }
 
     @classmethod
