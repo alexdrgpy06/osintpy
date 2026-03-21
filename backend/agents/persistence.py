@@ -108,30 +108,45 @@ class ProfilePersistenceAgent:
         new_name = new_data.get("identity", {}).get("full_name", "").strip().upper()
         
         if not row and (new_ci or new_ruc or (new_name and new_name != "DESCONOCIDO")):
-            cursor.execute("SELECT id, data_json, full_name FROM profiles")
-            all_profiles = cursor.fetchall()
-            for p_id, p_data_str, p_full_name in all_profiles:
-                try:
-                    p_data = json.loads(p_data_str)
-                except:
-                    continue
-                existing_ci = p_data.get("identity", {}).get("ci")
-                existing_ruc = p_data.get("fiscal", {}).get("ruc")
-                existing_name = (p_full_name or "").strip().upper()
-                
-                matched = False
-                if new_ci and existing_ci and new_ci == existing_ci:
-                    matched = True
-                elif new_ruc and existing_ruc and new_ruc == existing_ruc:
-                    matched = True
-                elif new_name and new_name != "DESCONOCIDO" and existing_name and existing_name != "DESCONOCIDO":
-                    if new_name == existing_name or fuzz.ratio(new_name, existing_name) >= 90:
-                        matched = True
-                
-                if matched:
-                    row = (p_id, p_data_str)
-                    profile_id = p_id
-                    break
+            if new_ci:
+                cursor.execute("""
+                    SELECT id, data_json
+                    FROM profiles
+                    WHERE json_valid(data_json) = 1
+                      AND json_extract(data_json, '$.identity.ci') = ?
+                """, (new_ci,))
+                row = cursor.fetchone()
+                if row:
+                    profile_id = row[0]
+
+            if not row and new_ruc:
+                cursor.execute("""
+                    SELECT id, data_json
+                    FROM profiles
+                    WHERE json_valid(data_json) = 1
+                      AND json_extract(data_json, '$.fiscal.ruc') = ?
+                """, (new_ruc,))
+                row = cursor.fetchone()
+                if row:
+                    profile_id = row[0]
+
+            if not row and new_name and new_name != "DESCONOCIDO":
+                cursor.execute("""
+                    SELECT id, data_json
+                    FROM profiles
+                    WHERE UPPER(TRIM(full_name)) = ?
+                """, (new_name,))
+                row = cursor.fetchone()
+                if row:
+                    profile_id = row[0]
+                else:
+                    cursor.execute("SELECT id, data_json, full_name FROM profiles WHERE full_name IS NOT NULL AND UPPER(TRIM(full_name)) != 'DESCONOCIDO'")
+                    for p_id, p_data_str, p_full_name in cursor.fetchall():
+                        existing_name = p_full_name.strip().upper()
+                        if fuzz.ratio(new_name, existing_name) >= 90:
+                            row = (p_id, p_data_str)
+                            profile_id = p_id
+                            break
         
         if row:
             existing_data = json.loads(row[1])
