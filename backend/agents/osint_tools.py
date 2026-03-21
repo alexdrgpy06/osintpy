@@ -2,7 +2,6 @@ import subprocess
 import os
 import sys
 import time
-import asyncio
 import phonenumbers
 import re
 import httpx
