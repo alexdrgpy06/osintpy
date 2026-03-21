@@ -167,29 +167,27 @@ class ProfilePersistenceAgent:
         try:
             with sqlite3.connect(cls.DB_PATH) as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT data_json FROM profiles") # Corrected column name to data_json
-                rows = cursor.fetchall()
                 
-                total_profiles = len(rows)
-                total_nodes = 0
-                total_emails = 0
-                total_phones = 0
+                cursor.execute("""
+                    SELECT
+                        COUNT(*),
+                        SUM(CASE WHEN json_valid(data_json) THEN COALESCE(json_array_length(json_extract(data_json, '$.digital_footprint')), 0) ELSE 0 END),
+                        SUM(CASE WHEN json_valid(data_json) THEN COALESCE(json_array_length(json_extract(data_json, '$.contacts.emails')), 0) ELSE 0 END),
+                        SUM(CASE WHEN json_valid(data_json) THEN COALESCE(json_array_length(json_extract(data_json, '$.contacts.phones')), 0) ELSE 0 END)
+                    FROM profiles
+                    WHERE data_json IS NOT NULL
+                """)
                 
-                for row in rows:
-                    if not row[0]: continue
-                    try:
-                        data = json.loads(row[0])
-                        total_nodes += len(data.get("digital_footprint", []))
-                        total_emails += len(data.get("contacts", {}).get("emails", []))
-                        total_phones += len(data.get("contacts", {}).get("phones", []))
-                    except: pass
-                    
-                return {
-                    "total_profiles": total_profiles,
-                    "total_nodes": total_nodes,
-                    "total_emails": total_emails,
-                    "total_phones": total_phones
-                }
+                row = cursor.fetchone()
+
+                if row:
+                    return {
+                        "total_profiles": row[0] or 0,
+                        "total_nodes": int(row[1] or 0),
+                        "total_emails": int(row[2] or 0),
+                        "total_phones": int(row[3] or 0)
+                    }
+                return {"total_profiles": 0, "total_nodes": 0, "total_emails": 0, "total_phones": 0}
         except Exception as e:
             import logging # Added import for logging
             logger = logging.getLogger("kuarahy") # Defined logger
@@ -271,33 +269,50 @@ class ProfilePersistenceAgent:
     @classmethod
     def get_metrics(cls):
         cls.init_db()
-        conn = sqlite3.connect(cls.DB_PATH)
-        cursor = conn.cursor()
-        cursor.execute("SELECT data_json FROM profiles")
-        rows = cursor.fetchall()
-        conn.close()
         
-        total_profiles = len(rows)
-        total_socials = 0
-        total_emails = 0
-        total_news = 0
-        high_risk_count = 0
-        
-        for r in rows:
-            data = json.loads(r[0])
-            total_socials += len(data.get("digital_footprint", []))
-            total_emails += len(data.get("contacts", {}).get("emails", []))
-            total_news += len(data.get("news_mentions", []))
-            if data.get("risk_score", 0) > 50:
-                high_risk_count += 1
+        try:
+            with sqlite3.connect(cls.DB_PATH) as conn:
+                cursor = conn.cursor()
                 
-        return {
-            "total_profiles": total_profiles,
-            "total_social_accounts": total_socials,
-            "total_emails_leaked": total_emails,
-            "total_news_mentions": total_news,
-            "high_risk_profiles": high_risk_count
-        }
+                cursor.execute("""
+                    SELECT
+                        COUNT(*),
+                        SUM(CASE WHEN json_valid(data_json) THEN COALESCE(json_array_length(json_extract(data_json, '$.digital_footprint')), 0) ELSE 0 END),
+                        SUM(CASE WHEN json_valid(data_json) THEN COALESCE(json_array_length(json_extract(data_json, '$.contacts.emails')), 0) ELSE 0 END),
+                        SUM(CASE WHEN json_valid(data_json) THEN COALESCE(json_array_length(json_extract(data_json, '$.news_mentions')), 0) ELSE 0 END),
+                        SUM(CASE WHEN json_valid(data_json) AND CAST(json_extract(data_json, '$.risk_score') AS INTEGER) > 50 THEN 1 ELSE 0 END)
+                    FROM profiles
+                    WHERE data_json IS NOT NULL
+                """)
+
+                row = cursor.fetchone()
+
+                if row:
+                    return {
+                        "total_profiles": row[0] or 0,
+                        "total_social_accounts": int(row[1] or 0),
+                        "total_emails_leaked": int(row[2] or 0),
+                        "total_news_mentions": int(row[3] or 0),
+                        "high_risk_profiles": int(row[4] or 0)
+                    }
+                return {
+                    "total_profiles": 0,
+                    "total_social_accounts": 0,
+                    "total_emails_leaked": 0,
+                    "total_news_mentions": 0,
+                    "high_risk_profiles": 0
+                }
+        except Exception as e:
+            import logging
+            logger = logging.getLogger("kuarahy")
+            logger.error(f"Error getting metrics: {e}")
+            return {
+                "total_profiles": 0,
+                "total_social_accounts": 0,
+                "total_emails_leaked": 0,
+                "total_news_mentions": 0,
+                "high_risk_profiles": 0
+            }
 
     @classmethod
     def get_global_radar(cls):
