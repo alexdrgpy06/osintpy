@@ -2,7 +2,6 @@ import asyncio
 import os
 import sys
 from services.task_manager import task_manager
-from ai.processor import AIProcessor
 import json
 
 async def test_v10_pipeline():
