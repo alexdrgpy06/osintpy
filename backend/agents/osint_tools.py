@@ -102,7 +102,11 @@ class OSINTToolAgent:
     def extract_platform_name(cls, url: str) -> str:
         """Extract clean platform name using EXACT domain matching."""
         try:
+            if not url:
+                return "Unknown"
             domain = urlparse(url).netloc.lower().replace("www.", "")
+            if not domain:
+                return "Unknown"
             # Exact match first
             if domain in cls.PLATFORM_MAP:
                 return cls.PLATFORM_MAP[domain]
@@ -113,7 +117,7 @@ class OSINTToolAgent:
                 if parent in cls.PLATFORM_MAP:
                     return cls.PLATFORM_MAP[parent]
             # Fallback: capitalize first part
-            return parts[0].capitalize() if parts else "Unknown"
+            return parts[0].capitalize() if parts and parts[0] else "Unknown"
         except:
             return "Unknown"
 
