@@ -59,7 +59,7 @@ class NewsSearchAgent:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=15, verify=False) as client:
+            async with httpx.AsyncClient(timeout=15, verify=True) as client:
                 response = await client.get(url, headers=headers)
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.text, 'html.parser')
@@ -109,7 +109,7 @@ class NewsSearchAgent:
         }
         
         try:
-            async with httpx.AsyncClient(timeout=15, verify=False) as client:
+            async with httpx.AsyncClient(timeout=15, verify=True) as client:
                 response = await client.get(url, headers=headers)
                 if response.status_code == 200:
                     soup = BeautifulSoup(response.text, 'xml')

@@ -170,7 +170,7 @@ class ParaguayDataAgent:
             "Referer": "https://www.set.gov.py/"
         }
         try:
-            async with httpx.AsyncClient(timeout=10, verify=False) as client:
+            async with httpx.AsyncClient(timeout=10, verify=True) as client:
                 response = await client.get(url, headers=headers)
                 if response.status_code == 200:
                     if "No se encuentra el RUC" in response.text:
@@ -380,7 +380,7 @@ class ParaguayDataAgent:
         """
         url = "https://datos.congreso.gov.py/opendata/api/data/parlamentario"
         try:
-            async with httpx.AsyncClient(timeout=10, verify=False) as client:
+            async with httpx.AsyncClient(timeout=10, verify=True) as client:
                 resp = await client.get(url)
                 if resp.status_code == 200:
                     data = resp.json()

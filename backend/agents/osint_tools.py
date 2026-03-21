@@ -354,7 +354,7 @@ class OSINTToolAgent:
         """EmailRep.io — email reputation check (free, 100/day)."""
         callback(f"[INFO] Consultando EmailRep.io...")
         try:
-            async with httpx.AsyncClient(timeout=15, verify=False) as client:
+            async with httpx.AsyncClient(timeout=15, verify=True) as client:
                 resp = await client.get(f"https://emailrep.io/{email}", headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
                 if resp.status_code == 200:
                     data = resp.json()
@@ -395,7 +395,7 @@ class OSINTToolAgent:
             return
         callback(f"[INFO] Consultando Hunter.io...")
         try:
-            async with httpx.AsyncClient(timeout=15, verify=False) as client:
+            async with httpx.AsyncClient(timeout=15, verify=True) as client:
                 resp = await client.get(f"https://api.hunter.io/v2/email-verifier", params={"email": email, "api_key": api_key})
                 if resp.status_code == 200:
                     data = resp.json().get("data", {})
@@ -408,7 +408,7 @@ class OSINTToolAgent:
         """LeakCheck — verify if email has been leaked."""
         callback(f"[INFO] Consultando LeakCheck...")
         try:
-            async with httpx.AsyncClient(timeout=15, verify=False) as client:
+            async with httpx.AsyncClient(timeout=15, verify=True) as client:
                 resp = await client.get(f"https://leakcheck.io/api/public", params={"check": email})
                 if resp.status_code == 200:
                     data = resp.json()
@@ -436,7 +436,7 @@ class OSINTToolAgent:
         callback(f"[INFO] Consultando historial de fraudes/estafas en ListaHu para {phone}...")
         clean_phone = "".join(filter(str.isdigit, phone))
         try:
-            async with httpx.AsyncClient(timeout=10, verify=False) as client:
+            async with httpx.AsyncClient(timeout=10, verify=True) as client:
                 res = await client.get(f"https://listahu.org/api/v1/denuncias/?numero={clean_phone}")
                 if res.status_code == 200:
                     data = res.json()
@@ -471,7 +471,7 @@ class OSINTToolAgent:
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
             }
             
-            async with httpx.AsyncClient(timeout=10, verify=False) as client:
+            async with httpx.AsyncClient(timeout=10, verify=True) as client:
                 res = await client.get(url, headers=headers)
                 if res.status_code == 200:
                     soup = BeautifulSoup(res.text, 'html.parser')
