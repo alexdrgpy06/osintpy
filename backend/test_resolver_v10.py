@@ -1,6 +1,5 @@
 import asyncio
 from services.identity_resolver import OmniIdentityResolver
-import json
 
 async def test_v10_resolver():
     print("--- OSINTPY v10: Identity Resolver Unit Test ---")
