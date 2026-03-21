@@ -292,12 +292,23 @@ class OSINTToolAgent:
         except Exception as e:
             callback(f"[ERROR PHONE] {str(e)}")
 
+    @staticmethod
+    def sanitize_cli_arg(arg: str) -> str:
+        """
+        Sanitizes arguments passed to CLI tools to prevent flag/option injection.
+        Removes leading hyphens so strings like '--help' become 'help'.
+        """
+        if arg is None:
+            return ""
+        return str(arg).lstrip('-')
+
     # ═══════════════════════════════════════════════════════════════
     # CLI Tools
     # ═══════════════════════════════════════════════════════════════
 
     @classmethod
     def run_sherlock_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        username = cls.sanitize_cli_arg(username)
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         sherlock_dir = os.path.join(project_root, "sherlock")
         cmd = [sys.executable, "-m", "sherlock_project", username, "--timeout", "10", "--print-found", "--no-color"]
@@ -305,11 +316,13 @@ class OSINTToolAgent:
 
     @classmethod
     def run_maigret_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        username = cls.sanitize_cli_arg(username)
         cmd = [sys.executable, "-m", "maigret", username, "--timeout", "20", "-n", "30", "--no-color"]
         return cls.run_tool_streaming("Maigret", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=180)
 
     @classmethod
     def run_blackbird_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        username = cls.sanitize_cli_arg(username)
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         blackbird_dir = os.path.join(project_root, "blackbird")
         cmd = [sys.executable, "blackbird.py", "-u", username]
@@ -317,6 +330,7 @@ class OSINTToolAgent:
 
     @classmethod
     def run_holehe_live(cls, email: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        email = cls.sanitize_cli_arg(email)
         # Holehe exists as local dir, not pip-installed
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         holehe_dir = os.path.join(project_root, "holehe")
@@ -336,11 +350,13 @@ class OSINTToolAgent:
 
     @classmethod
     def run_toutatis_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        username = cls.sanitize_cli_arg(username)
         cmd = [sys.executable, "-m", "toutatis", "-u", username]
         return cls.run_tool_streaming("Toutatis", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=60)
 
     @classmethod
     def run_social_analyzer_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        username = cls.sanitize_cli_arg(username)
         cmd = [sys.executable, "-m", "social_analyzer", "--username", username, "--websites", "all", "--metadata", "--extract"]
         callback(f"[INFO] Iniciando rastreo pasivo (+1000 sitios) con Social-Analyzer...")
         return cls.run_tool_streaming("Social-Analyzer", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=300)
@@ -528,6 +544,7 @@ class OSINTToolAgent:
     @classmethod
     def run_truecaller_live(cls, phone: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
         """TrueCallerJS — requires local installation and login (zero-login fallback)."""
+        phone = cls.sanitize_cli_arg(phone)
         callback(f"[INFO] Intentando identificación con TrueCaller...")
         # Note: TrueCallerJS requires a local session. If not present, it fails.
         cmd = ["truecallerjs", "-p", phone, "--json"]
@@ -550,6 +567,7 @@ class OSINTToolAgent:
     @classmethod
     async def run_phoneinfoga_live(cls, phone: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
         """Runs PhoneInfoGa scan (zero-login) to identify carrier, location and footprint."""
+        phone = cls.sanitize_cli_arg(phone)
         callback(f"[INFO] Ejecutando PhoneInfoGa (E.164) para {phone}...")
         cmd = ["phoneinfoga", "scan", "-n", phone]
         
