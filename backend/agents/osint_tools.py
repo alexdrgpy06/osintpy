@@ -297,7 +297,18 @@ class OSINTToolAgent:
     # ═══════════════════════════════════════════════════════════════
 
     @classmethod
+    def _is_safe_input(cls, val: str) -> bool:
+        """Validate CLI input to prevent command/option injection."""
+        if not val or val.startswith("-"):
+            return False
+        # Allow alphanumeric, underscore, dot, dash, @ and + (for email aliases)
+        return bool(re.match(r"^[a-zA-Z0-9_.\-@+]+$", val))
+
+    @classmethod
     def run_sherlock_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        if not cls._is_safe_input(username):
+            callback(f"[ERROR] Invalid username format for Sherlock.")
+            return
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         sherlock_dir = os.path.join(project_root, "sherlock")
         cmd = [sys.executable, "-m", "sherlock_project", username, "--timeout", "10", "--print-found", "--no-color"]
@@ -305,11 +316,17 @@ class OSINTToolAgent:
 
     @classmethod
     def run_maigret_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        if not cls._is_safe_input(username):
+            callback(f"[ERROR] Invalid username format for Maigret.")
+            return
         cmd = [sys.executable, "-m", "maigret", username, "--timeout", "20", "-n", "30", "--no-color"]
         return cls.run_tool_streaming("Maigret", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=180)
 
     @classmethod
     def run_blackbird_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        if not cls._is_safe_input(username):
+            callback(f"[ERROR] Invalid username format for Blackbird.")
+            return
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         blackbird_dir = os.path.join(project_root, "blackbird")
         cmd = [sys.executable, "blackbird.py", "-u", username]
@@ -317,6 +334,9 @@ class OSINTToolAgent:
 
     @classmethod
     def run_holehe_live(cls, email: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        if not cls._is_safe_input(email):
+            callback(f"[ERROR] Invalid email format for Holehe.")
+            return
         # Holehe exists as local dir, not pip-installed
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         holehe_dir = os.path.join(project_root, "holehe")
@@ -336,11 +356,17 @@ class OSINTToolAgent:
 
     @classmethod
     def run_toutatis_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        if not cls._is_safe_input(username):
+            callback(f"[ERROR] Invalid username format for Toutatis.")
+            return
         cmd = [sys.executable, "-m", "toutatis", "-u", username]
         return cls.run_tool_streaming("Toutatis", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=60)
 
     @classmethod
     def run_social_analyzer_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        if not cls._is_safe_input(username):
+            callback(f"[ERROR] Invalid username format for Social-Analyzer.")
+            return
         cmd = [sys.executable, "-m", "social_analyzer", "--username", username, "--websites", "all", "--metadata", "--extract"]
         callback(f"[INFO] Iniciando rastreo pasivo (+1000 sitios) con Social-Analyzer...")
         return cls.run_tool_streaming("Social-Analyzer", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=300)
