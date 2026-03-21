@@ -19,11 +19,25 @@ from services.health_check import SystemValidator
 from agents.persistence import ProfilePersistenceAgent
 from agents.feedback_processor import FeedbackProcessor
 
+from contextlib import asynccontextmanager
+
 # Logging setup
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 logger = logging.getLogger("kuarahy")
 
-app = FastAPI(title="OSINTPY v4 — Kuarahy Intelligence Engine")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    logger.info("[STARTUP] Motor de inteligencia Kuarahy v4 activo.")
+    yield
+    # Shutdown logic
+    logger.info("[SHUTDOWN] Cerrando procesos del motor.")
+
+app = FastAPI(
+    title="OSINTPY v4 — Kuarahy Intelligence Engine",
+    description="Motor de Inteligencia Táctica Paraguaya",
+    lifespan=lifespan
+)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 class SearchQuery(BaseModel):
@@ -140,22 +154,6 @@ async def refresh_profile(profile_id: str, background_tasks: BackgroundTasks):
     task_id = task_manager.create_task(target_data)
     background_tasks.add_task(task_manager.run_engine, task_id)
     return {"task_id": task_id, "message": "Refrescando datos del perfil..."}
-
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup logic
-    logger.info("[STARTUP] Motor de inteligencia Kuarahy v4 activo.")
-    yield
-    # Shutdown logic
-    logger.info("[SHUTDOWN] Cerrando procesos del motor.")
-
-app = FastAPI(
-    title="OSINTPY Backend",
-    description="Motor de Inteligencia Táctica Paraguaya",
-    lifespan=lifespan
-)
 
 @app.get("/health_basic")
 async def health_basic():
