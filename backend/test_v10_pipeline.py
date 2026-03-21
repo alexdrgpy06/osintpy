@@ -1,9 +1,11 @@
+import pytest
 import asyncio
 import os
 import sys
 from services.task_manager import task_manager
 import json
 
+@pytest.mark.asyncio
 async def test_v10_pipeline():
     print("--- OSINTPY v10: Hyper-Velocity Pipeline Integration Test ---")
     

@@ -1,2 +1,12 @@
 node_modules/
 frontend/node_modules/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+*.db
+
+# Log/Journal files
+backend/journals/
