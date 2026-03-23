@@ -39,6 +39,9 @@ class OSINTToolAgent:
         r"\?q=",             # Search queries
     ]
 
+    _NORMALIZED_BLACKLISTED_URLS = {u.lower().rstrip("/") for u in BLACKLISTED_URLS}
+    _COMPILED_BLACKLISTED_URL_PATTERNS = [re.compile(p) for p in BLACKLISTED_URL_PATTERNS]
+
     # ═══════════════════════════════════════════════════════════════
     # PLATFORM NAME MAPPING — exact domain match (no substring!)
     # ═══════════════════════════════════════════════════════════════
@@ -122,7 +125,7 @@ class OSINTToolAgent:
         url_lower = url.lower().rstrip("/")
         
         # Exact match blacklist
-        if url_lower in {u.lower().rstrip("/") for u in cls.BLACKLISTED_URLS}:
+        if url_lower in cls._NORMALIZED_BLACKLISTED_URLS:
             return True
         
         # Domain blacklist
@@ -135,8 +138,8 @@ class OSINTToolAgent:
             pass
         
         # Pattern blacklist
-        for pattern in cls.BLACKLISTED_URL_PATTERNS:
-            if re.search(pattern, url_lower):
+        for pattern in cls._COMPILED_BLACKLISTED_URL_PATTERNS:
+            if pattern.search(url_lower):
                 return True
         
         # URL is clearly a search/query page (has the username in query params, not path)
