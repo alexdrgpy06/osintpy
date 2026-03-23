@@ -2,7 +2,6 @@ import sqlite3
 import os
 import json
 from datetime import datetime
-from dotenv import load_dotenv
 from typing import Dict, List, Optional
 
 try:
