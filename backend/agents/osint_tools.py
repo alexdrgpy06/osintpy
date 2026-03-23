@@ -119,6 +119,13 @@ class OSINTToolAgent:
         except:
             return "Unknown"
 
+    @staticmethod
+    def is_valid_username(username: str) -> bool:
+        """Validate username to prevent command/argument injection."""
+        if not username:
+            return False
+        return bool(re.match(r"^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$", username))
+
     @classmethod
     def is_false_positive(cls, url: str) -> bool:
         """Check if a URL is a known false positive."""
@@ -338,6 +345,10 @@ class OSINTToolAgent:
 
     @classmethod
     def run_toutatis_live(cls, username: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        if not cls.is_valid_username(username):
+            callback("[ERROR] Formato de usuario inválido para Toutatis.")
+            return
+
         cmd = [sys.executable, "-m", "toutatis", "-u", username]
         return cls.run_tool_streaming("Toutatis", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=60)
 
