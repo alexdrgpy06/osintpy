@@ -8,7 +8,7 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 class SearchQuery(BaseModel):
     query: str
-    type: str  # ci, ruc, name, phone, email
+    type: str  # ci, ruc, name, phone, email, domain
 
 @router.post("/")
 async def perform_search(search_query: SearchQuery):
@@ -40,6 +40,24 @@ async def perform_search(search_query: SearchQuery):
             "description": f"Encontrado en {len(osint_results)} plataformas.",
             "type": "osint",
             "data": osint_results
+        })
+
+    # 3. Domain Search (theHarvester)
+    if search_query.type == "domain":
+        domain_results = []
+        domain_logs = []
+        OSINTToolAgent.run_theharvester_live(
+            search_query.query,
+            lambda msg: None,
+            domain_logs,
+            domain_results
+        )
+        results.append({
+            "source": "theHarvester",
+            "title": f"OSINT de Dominio: {search_query.query}",
+            "description": f"Encontrados {len(domain_results)} registros.",
+            "type": "domain",
+            "data": domain_results
         })
 
     return {
