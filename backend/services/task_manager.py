@@ -122,40 +122,35 @@ class LocalTaskRunner:
             real_names: List[str] = []
 
             # Combine original query with new seeds and recursive targets
-            osint_username_targets = []
-            osint_email_targets = []
-            osint_phone_targets = []
+            osint_username_targets = set()
+            osint_email_targets = set()
+            osint_phone_targets = set()
 
             # 1. Handle primary Omni targets
-            if alias: osint_username_targets.append(alias)
+            if alias: osint_username_targets.add(alias)
             if email: 
-                osint_email_targets.append(email)
-                osint_username_targets.append(email.split("@")[0]) # Infer alias from email
-            if telefono: osint_phone_targets.append(telefono)
+                osint_email_targets.add(email)
+                osint_username_targets.add(email.split("@")[0]) # Infer alias from email
+            if telefono: osint_phone_targets.add(telefono)
 
             # 2. Handle extra seeds (manual injection)
             for seed in extra_seeds:
-                if "@" in seed: osint_email_targets.append(seed)
-                elif seed.startswith("+") or (seed.isdigit() and len(seed) > 8): osint_phone_targets.append(seed)
-                else: osint_username_targets.append(seed)
+                if "@" in seed: osint_email_targets.add(seed)
+                elif seed.startswith("+") or (seed.isdigit() and len(seed) > 8): osint_phone_targets.add(seed)
+                else: osint_username_targets.add(seed)
             
             # 3. Handle recursive targets (verified findings)
             for rt in recursive_targets:
-                if rt["type"] == "email": osint_email_targets.append(rt["value"])
-                elif rt["type"] == "phone": osint_phone_targets.append(rt["value"])
+                if rt["type"] == "email": osint_email_targets.add(rt["value"])
+                elif rt["type"] == "phone": osint_phone_targets.add(rt["value"])
                 elif rt["type"] in ("social", "username"):
                     # Extract username from URL if social
                     val = rt["value"]
                     if val.startswith("http"):
                         username = val.rstrip("/").split("/")[-1]
-                        if username and len(username) > 2: osint_username_targets.append(username)
+                        if username and len(username) > 2: osint_username_targets.add(username)
                     else:
-                        osint_username_targets.append(val)
-
-            # Deduplicate targets
-            osint_username_targets = list(set(osint_username_targets))
-            osint_email_targets = list(set(osint_email_targets))
-            osint_phone_targets = list(set(osint_phone_targets))
+                        osint_username_targets.add(val)
 
             # ═══════════════════════════════════════════════════════
             # FASE 1: Civic & National Data (Gov/HUMINT)
@@ -174,13 +169,12 @@ class LocalTaskRunner:
                 
                 # Pivot: If we found real names from Gov, append to Social OSINT
                 for name in real_names:
-                    if name not in osint_username_targets:
-                        osint_username_targets.append(name)
+                    osint_username_targets.add(name)
             
-            # Deduplicate targets
-            osint_username_targets = list(set(osint_username_targets))
-            osint_email_targets = list(set(osint_email_targets))
-            osint_phone_targets = list(set(osint_phone_targets))
+            # Final conversion to list
+            osint_username_targets = list(osint_username_targets)
+            osint_email_targets = list(osint_email_targets)
+            osint_phone_targets = list(osint_phone_targets)
             
             # Update estimate for UI
             total_tools = (len(osint_username_targets) * 3) + (len(osint_email_targets) * 2) + len(osint_phone_targets) + 1
