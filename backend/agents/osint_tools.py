@@ -358,6 +358,59 @@ class OSINTToolAgent:
         callback(f"[INFO] Iniciando rastreo pasivo (+1000 sitios) con Social-Analyzer...")
         return cls.run_tool_streaming("Social-Analyzer", cmd, os.getcwd(), callback, current_logs, consolidated_results, timeout=300)
 
+    @classmethod
+    def run_theharvester_live(cls, domain: str, callback: Callable, current_logs: List[str], consolidated_results: List[Dict]):
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        theharvester_dir = os.path.join(project_root, "theHarvester")
+        cmd = [sys.executable, "-m", "theHarvester", "-d", domain, "-b", "all"]
+        callback(f"[INFO] Iniciando theHarvester para {domain}...")
+
+        try:
+            # theHarvester doesn't have a structured [+] output by default, it usually lists results under headings.
+            # We'll use a simpler heuristic for emails, IPs, and subdomains
+            current_section = None
+            for line in cls.stream_command(cmd, theharvester_dir, timeout=300):
+                clean = line.strip()
+                if not clean: continue
+                current_logs.append(f"[theHarvester] {clean}")
+
+                # Identify sections
+                if "Emails found:" in clean:
+                    current_section = "emails"
+                    continue
+                elif "Hosts found:" in clean:
+                    current_section = "hosts"
+                    continue
+                elif "IPs found:" in clean:
+                    current_section = "ips"
+                    continue
+
+                # Parse based on section if the line doesn't look like standard log output
+                if current_section and not clean.startswith("[*]") and not clean.startswith("[-]"):
+                    if current_section == "emails" and "@" in clean:
+                        email = clean.split()[0]
+                        node = {"type": "email", "source": "theHarvester", "value": email}
+                        if node not in consolidated_results:
+                            consolidated_results.append(node)
+                            callback(f"[+] Email: {email}")
+                    elif current_section == "hosts":
+                        host = clean.split()[0]
+                        node = {"type": "host", "source": "theHarvester", "value": host}
+                        if node not in consolidated_results:
+                            consolidated_results.append(node)
+                            callback(f"[+] Host: {host}")
+                    elif current_section == "ips":
+                        ip = clean.split()[0]
+                        node = {"type": "ip", "source": "theHarvester", "value": ip}
+                        if node not in consolidated_results:
+                            consolidated_results.append(node)
+                            callback(f"[+] IP: {ip}")
+
+        except Exception as e:
+            callback(f"[ERROR theHarvester] {str(e)}")
+
+        callback(f"[INFO] theHarvester finalizado.")
+
     # ═══════════════════════════════════════════════════════════════
     # API-based Tools (No CLI needed)
     # ═══════════════════════════════════════════════════════════════
