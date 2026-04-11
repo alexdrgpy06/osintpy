@@ -4,6 +4,26 @@ import httpx
 import asyncio
 import re
 
+class ParaguayGovAgent:
+    """
+    Compatibility class for ParaguayDataAgent.
+    """
+    @staticmethod
+    def query_padron(ci: str):
+        data = ParaguayDataAgent.search_ci(ci)
+        return {"source": "PADRON_TSJE", "data": data} if data else {"source": "PADRON_TSJE", "data": None}
+
+    @staticmethod
+    def query_ips(ci: str):
+        # Placeholder for IPS check
+        return {"source": "IPS", "data": f"IPS Check for {ci}"}
+
+    @staticmethod
+    def query_ruc(ruc: str):
+        # Sync wrapper for scrape_ruc_set or search_ruc_db
+        hits = ParaguayDataAgent.search_ruc_db(ruc.split("-")[0])
+        return {"source": "SET_DNIT", "data": hits[0] if hits else None}
+
 class ParaguayDataAgent:
     """
     Agente especializado en datos reales de Paraguay.
